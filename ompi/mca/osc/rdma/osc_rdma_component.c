@@ -128,7 +128,8 @@ ompi_osc_base_module_t ompi_osc_rdma_module_rdma_template = {
     .osc_win_attach = ompi_osc_rdma_attach,
     .osc_win_detach  = ompi_osc_rdma_detach,
     .osc_free = ompi_osc_rdma_free,
-
+    .osc_ifree = ompi_osc_rdma_ifree,
+    .osc_complete_ifree = ompi_osc_rdma_complete_ifree,
     .osc_put = ompi_osc_rdma_put,
     .osc_get = ompi_osc_rdma_get,
     .osc_accumulate = ompi_osc_rdma_accumulate,
@@ -979,25 +980,23 @@ static int ompi_osc_rdma_share_data (ompi_osc_rdma_module_t *module)
             my_data->base = (uint64_t) (intptr_t) module->rank_array;
             /* store my rank in the length field */
             my_data->len = (osc_rdma_size_t) my_rank;
-
+            
             if (module->selected_btl->btl_register_mem) {
                 memcpy (my_data->btl_handle_data, module->state_handle, module->selected_btl->btl_registration_handle_size);
             }
 
             /* gather state data at each node leader */
             if (ompi_comm_size (module->local_leaders) > 1) {
-                ret = module->local_leaders->c_coll->coll_allgather (MPI_IN_PLACE, module->region_size, MPI_BYTE,
-                                                                     module->node_comm_info,
-                                                                     module->region_size, MPI_BYTE, module->local_leaders,
-                                                                     module->local_leaders->c_coll->coll_allgather_module);
+                ret = module->local_leaders->c_coll->coll_allgather (MPI_IN_PLACE, module->region_size, MPI_BYTE, module->node_comm_info,
+                                                                    module->region_size, MPI_BYTE, module->local_leaders,
+                                                                    module->local_leaders->c_coll->coll_allgather_module);
                 if (OMPI_SUCCESS != ret) {
                     OSC_RDMA_VERBOSE(MCA_BASE_VERBOSE_ERROR, "leader allgather failed with ompi error code %d", ret);
                     break;
                 }
             }
 
-            int base_rank = ompi_comm_rank (module->local_leaders) * ((comm_size + module->node_count - 1) /
-                                                                      module->node_count);
+            int base_rank = ompi_comm_rank (module->local_leaders) * ((comm_size + module->node_count - 1) / module->node_count);
 
             /* fill in the local part of the rank -> node map */
             for (int i = 0 ; i < RANK_ARRAY_COUNT(module) ; ++i) {
@@ -1032,6 +1031,7 @@ static int ompi_osc_rdma_share_data (ompi_osc_rdma_module_t *module)
 
     return global_result;
 }
+
 
 static int ompi_osc_rdma_create_groups (ompi_osc_rdma_module_t *module)
 {
@@ -1415,7 +1415,6 @@ static int ompi_osc_rdma_component_iselect (struct ompi_win_t *win, void **base,
                                             struct opal_info_t *info, int flavor,
                                             struct ompi_request_t **request, int *model)
 {
-    int world_size = ompi_comm_size (comm);
     int ret;
     ompi_communicator_t *ncomm;
     ompi_request_t *req;

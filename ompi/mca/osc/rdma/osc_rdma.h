@@ -275,6 +275,8 @@ OMPI_MODULE_DECLSPEC extern ompi_osc_rdma_component_t mca_osc_rdma_component;
 #define GET_MODULE(win) ((ompi_osc_rdma_module_t*) win->w_osc_module)
 
 int ompi_osc_rdma_free (struct ompi_win_t *win);
+int ompi_osc_rdma_ifree (struct ompi_win_t *win, struct ompi_request_t ** req);
+int ompi_osc_rdma_complete_ifree (struct ompi_win_t *win);
 
 
 /* peer functions */

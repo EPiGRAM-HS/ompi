@@ -280,6 +280,44 @@ typedef int (*ompi_osc_base_module_win_detach_fn_t)(struct ompi_win_t *win, cons
  */
 typedef int (*ompi_osc_base_module_free_fn_t)(struct ompi_win_t *win);
 
+/**
+ * Free resources associated with win
+ *
+ * Free all resources associated with \c win.  The component must
+ * provide the barrier semantics required by MPI-2 6.2.1.  The caller
+ * will guarantee that no new calls into the module are made after the
+ * start of this call.  It is possible that the window is locked by
+ * remote processes.  win->w_flags will have OMPI_WIN_FREED set before
+ * this function is called.
+ *
+ * @param[in]  win  Window to free
+ * @param[in]  req  request
+ *
+ * @retval OMPI_SUCCESS Component successfully selected
+ * @retval OMPI_ERROR   An unspecified error occurred
+ */
+typedef int (*ompi_osc_base_module_ifree_fn_t)(struct ompi_win_t *win,
+                                               struct ompi_request_t **req);
+
+
+/**
+ * Free resources associated with win
+ *
+ * Free all resources associated with \c win.  The component must
+ * provide the barrier semantics required by MPI-2 6.2.1.  The caller
+ * will guarantee that no new calls into the module are made after the
+ * start of this call.  It is possible that the window is locked by
+ * remote processes.  win->w_flags will have OMPI_WIN_FREED set before
+ * this function is called.
+ *
+ * @param[in]  win  Window to free
+ *
+ * @retval OMPI_SUCCESS Component successfully selected
+ * @retval OMPI_ERROR   An unspecified error occurred
+ */
+typedef int (*ompi_osc_base_module_complete_ifree_fn_t)(struct ompi_win_t *win);
+                                                        
+
 
 typedef int (*ompi_osc_base_module_put_fn_t)(const void *origin_addr,
                                             int origin_count,
@@ -450,6 +488,8 @@ struct ompi_osc_base_module_3_0_0_t {
     ompi_osc_base_module_win_attach_fn_t osc_win_attach;
     ompi_osc_base_module_win_detach_fn_t osc_win_detach;
     ompi_osc_base_module_free_fn_t osc_free;
+    ompi_osc_base_module_ifree_fn_t osc_ifree;
+    ompi_osc_base_module_complete_ifree_fn_t osc_complete_ifree;
 
     ompi_osc_base_module_put_fn_t osc_put;
     ompi_osc_base_module_get_fn_t osc_get;
