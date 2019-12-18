@@ -237,13 +237,14 @@ ompi_win_create(void *base, size_t size,
     ompi_win_t *win;
     int model;
     int ret;
-
+    ompi_request_t **request;
     ret = alloc_window (comm, info, MPI_WIN_FLAVOR_CREATE, &win);
     if (OMPI_SUCCESS != ret) {
         return ret;
     }
 
-    ret = ompi_osc_base_select(win, &base, size, disp_unit, comm, info, MPI_WIN_FLAVOR_CREATE, &model);
+    ret = ompi_osc_base_select(win, &base, size, disp_unit, comm, info, MPI_WIN_FLAVOR_CREATE, 
+                               &model);
     if (OMPI_SUCCESS != ret) {
         OBJ_RELEASE(win);
         return ret;
@@ -269,13 +270,14 @@ ompi_win_allocate(size_t size, int disp_unit, opal_info_t *info,
     int model;
     int ret;
     void *base;
-
+    ompi_request_t **request;
     ret = alloc_window (comm, info, MPI_WIN_FLAVOR_ALLOCATE, &win);
     if (OMPI_SUCCESS != ret) {
         return ret;
     }
 
-    ret = ompi_osc_base_select(win, &base, size, disp_unit, comm, info, MPI_WIN_FLAVOR_ALLOCATE, &model);
+    ret = ompi_osc_base_select(win, &base, size, disp_unit, comm, info, MPI_WIN_FLAVOR_ALLOCATE, 
+                               &model);
     if (OMPI_SUCCESS != ret) {
         OBJ_RELEASE(win);
         return ret;
@@ -302,13 +304,14 @@ ompi_win_allocate_shared(size_t size, int disp_unit, opal_info_t *info,
     int model;
     int ret;
     void *base;
-
+    ompi_request_t **request;
     ret = alloc_window (comm, info, MPI_WIN_FLAVOR_SHARED, &win);
     if (OMPI_SUCCESS != ret) {
         return ret;
     }
 
-    ret = ompi_osc_base_select(win, &base, size, disp_unit, comm, info, MPI_WIN_FLAVOR_SHARED, &model);
+    ret = ompi_osc_base_select(win, &base, size, disp_unit, comm, info, MPI_WIN_FLAVOR_SHARED, 
+                               &model);
     if (OMPI_SUCCESS != ret) {
         OBJ_RELEASE(win);
         return ret;
@@ -333,13 +336,15 @@ ompi_win_create_dynamic(opal_info_t *info, ompi_communicator_t *comm, ompi_win_t
     ompi_win_t *win;
     int model;
     int ret;
-
+    ompi_request_t **request;
+    
     ret = alloc_window (comm, info, MPI_WIN_FLAVOR_DYNAMIC, &win);
     if (OMPI_SUCCESS != ret) {
         return ret;
     }
 
-    ret = ompi_osc_base_select(win, MPI_BOTTOM, 0, 1, comm, info, MPI_WIN_FLAVOR_DYNAMIC, &model);
+    ret = ompi_osc_base_select(win, MPI_BOTTOM, 0, 1, comm, info, MPI_WIN_FLAVOR_DYNAMIC,  
+                               &model);
     if (OMPI_SUCCESS != ret) {
         OBJ_RELEASE(win);
         return ret;
@@ -352,6 +357,59 @@ ompi_win_create_dynamic(opal_info_t *info, ompi_communicator_t *comm, ompi_win_t
     }
 
     *newwin = win;
+
+    return OMPI_SUCCESS;
+}
+
+int
+ompi_win_icreate_dynamic(opal_info_t *info, ompi_communicator_t *comm, ompi_communicator_t **newcomm,
+                         ompi_win_t **newwin, ompi_request_t **request)
+{
+    ompi_win_t *win;
+    int model;
+    int ret;
+    ompi_communicator_t *ncomm;
+    ompi_request_t *req;
+    ompi_osc_base_component_t *component;
+        
+    ret = alloc_window (comm, info, MPI_WIN_FLAVOR_DYNAMIC, &win);
+    if (OMPI_SUCCESS != ret) {
+        return ret;
+    }
+    
+    ret = ompi_osc_base_iselect(win, MPI_BOTTOM, 0, 1, comm, &ncomm, info, MPI_WIN_FLAVOR_DYNAMIC,
+                                &req, &model);
+    if (OMPI_SUCCESS != ret) {
+        OBJ_RELEASE(win);
+        return ret;
+    }
+    
+    *newwin =  win;
+    *newcomm = ncomm;
+    *request = req;
+
+    return OMPI_SUCCESS;
+}
+
+int 
+ompi_complete_win_icreate_dynamic(opal_info_t *info, ompi_communicator_t *comm, ompi_win_t **newwin, 
+                                  ompi_request_t **request)
+{
+    int ret;
+    int model;
+    ompi_request_t *req;
+    ompi_win_t *win;
+    ret = ompi_osc_base_complete_iselect(win, MPI_BOTTOM, 0, 1, comm, info, 
+                                        MPI_WIN_FLAVOR_DYNAMIC, &req, &model);
+    
+    ret = config_window(MPI_BOTTOM, 0, 1, MPI_WIN_FLAVOR_DYNAMIC, model, win);
+    if (OMPI_SUCCESS != ret) {
+        OBJ_RELEASE(win);
+        return ret;
+    }
+
+    *newwin  = win;
+    *request = req;
 
     return OMPI_SUCCESS;
 }

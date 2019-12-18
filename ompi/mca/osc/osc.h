@@ -152,7 +152,80 @@ typedef int (*ompi_osc_base_component_select_fn_t)(struct ompi_win_t *win,
                                                    struct opal_info_t *info,
                                                    int flavor,
                                                    int *model);
+/**
+ * OSC nonblocking component select
+ *
+ * This component has been selected to provide one-sided services for
+ * the given window.  The win->w_osc_module field can be updated and
+ * memory can be associated with this window.  The module should be
+ * ready for use immediately upon return of this function, and the
+ * module is responsible for providing any required collective
+ * synchronization before the end of the call.
+ *
+ * @note The comm is the communicator specified from the user, so
+ * normal internal usage rules apply.  In other words, if you need
+ * communication for the life of the window, you should call
+ * comm_idup() during this function.
+ *
+ * @param[in/out]  win     The window handle, already filled in by MPI_WIN_CREATE()
+ * @param[in]      info    An info structure with hints from the user
+ * @param[in]      comm    The communicator specified by the user for the
+ *                         basis of the group membership for the Window.
+ * @param[in/out]  newcomm The new communicator in which comm communicator will be
+ *                         duplicated.
+ * @param[in/out]  req     The request need to check if an operation is completed.
+ *                      
+ *
+ * @retval OMPI_SUCCESS Component successfully selected
+ * @retval OMPI_ERROR             An unspecified error occurred
+ * @retval OMPI_ERR_RMA_PENDING   Pending error occurred
+ */
+typedef int (*ompi_osc_base_component_iselect_fn_t)(struct ompi_win_t *win,
+                                                    void **base,
+                                                    size_t size,
+                                                    int disp_unit,
+                                                    struct ompi_communicator_t *comm,
+                                                    struct ompi_communicator_t **newcomm,
+                                                    struct opal_info_t *info,
+                                                    int flavor,
+                                                    struct ompi_request_t **request,
+                                                    int *model);
+/**
+ * OSC nonblocking component complete nonblocking select
+ *
+ * This component has been selected to provide one-sided services for
+ * the given window.  The win->w_osc_module field can be updated and
+ * memory can be associated with this window.  The module should be
+ * ready for use immediately upon return of this function, and the
+ * module is responsible for providing any required collective
+ * synchronization before the end of the call.
+ *
+ * @note The comm is the communicator specified from the user, so
+ * normal internal usage rules apply.  In other words, if you need
+ * communication for the life of the window, you should call
+ * comm_idup() during this function.
+ *
+ * @param[in/out]  win     The window handle, already filled in by MPI_WIN_CREATE()
+ * @param[in]      info    An info structure with hints from the user
+ * @param[in]      comm    The communicator specified by the user for the
+ *                         basis of the group membership for the Window.
 
+ * @param[in/out]  req     The request need to check if an operation is completed.
+ *                      
+ *
+ * @retval OMPI_SUCCESS Component successfully selected
+ * @retval OMPI_ERROR             An unspecified error occurred
+ * @retval OMPI_ERR_RMA_PENDING   Pending error occurred
+ */
+typedef int (*ompi_osc_base_component_complete_iselect_fn_t)(struct ompi_win_t *win,
+                                                             void **base,
+                                                             size_t size,
+                                                             int disp_unit,
+                                                             struct ompi_communicator_t *comm,
+                                                             struct opal_info_t *info,
+                                                             int flavor,
+                                                             struct ompi_request_t **request,
+                                                             int *model);
 /**
  * OSC component interface
  *
@@ -171,6 +244,10 @@ struct ompi_osc_base_component_2_0_0_t {
     ompi_osc_base_component_query_fn_t osc_query;
     /** Create module for the given window */
     ompi_osc_base_component_select_fn_t osc_select;
+    /** Create module for the given nonblocking window */
+    ompi_osc_base_component_iselect_fn_t osc_iselect;
+    /** Create module to complete nonblocking window operations */
+    ompi_osc_base_component_complete_iselect_fn_t osc_complete_iselect;
     /* Finalize the component infrastructure */
     ompi_osc_base_component_finalize_fn_t osc_finalize;
 };

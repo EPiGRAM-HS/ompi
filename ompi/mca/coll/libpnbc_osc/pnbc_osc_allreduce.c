@@ -23,7 +23,7 @@
 #include "ompi/datatype/ompi_datatype.h"
 #include "ompi/op/op.h"
 #include "opal/util/bit_ops.h"
-
+#include "coll_libpnbc_osc_win.h"
 #include <assert.h>
 
 static inline int allred_sched_diss(int rank, int p, int count, MPI_Datatype datatype, ptrdiff_t gap,
@@ -45,13 +45,15 @@ static inline int allred_sched_redscat_allgather( int rank, int comm_size, int c
 
 static int nbc_allreduce_init(const void* sendbuf, void* recvbuf, int count, MPI_Datatype datatype,
                               MPI_Op op, struct ompi_communicator_t *comm, ompi_request_t ** request,
-                              struct mca_coll_base_module_2_3_0_t *module, bool persistent)
+                              struct mca_coll_base_module_2_3_0_t *module, ompi_win_t* win, 
+                              bool persistent)
 {
   int rank, p, res;
   ptrdiff_t ext, lb;
   NBC_Schedule *schedule;
   size_t size;
-
+  MPI_Aint* a_disp;
+  
   enum { NBC_ARED_BINOMIAL, NBC_ARED_RING, NBC_ARED_REDSCAT_ALLGATHER } alg;
   char inplace;
   void *tmpbuf = NULL;
@@ -63,6 +65,9 @@ static int nbc_allreduce_init(const void* sendbuf, void* recvbuf, int count, MPI
   rank = ompi_comm_rank (comm);
   p = ompi_comm_size (comm);
 
+  /* allocates memory for array of displacement */
+  a_disp = (MPI_Aint*)malloc (p * (sizeof(MPI_Aint)));
+  
   /* checks for datatype extent */
   res = ompi_datatype_get_extent(datatype, &lb, &ext);
   if (OMPI_SUCCESS != res) {
@@ -125,6 +130,13 @@ static int nbc_allreduce_init(const void* sendbuf, void* recvbuf, int count, MPI
     res = NBC_Sched_copy((void *)sendbuf, false, count, datatype,
                          recvbuf, false, count, datatype, schedule, false);
   } else {
+
+    /* attach sendbuf to window */
+    res = NBC_Sched_win_attach(sendbuf, count, datatype, schedule, true);
+    if (OPAL_UNLIKELY(OMPI_SUCCESS != res)) {
+      return res;
+    }
+    
     switch(alg) {
     case NBC_ARED_BINOMIAL:
       res = allred_sched_diss(rank, p, count, datatype, gap, sendbuf, recvbuf, op, inplace,
@@ -154,44 +166,14 @@ static int nbc_allreduce_init(const void* sendbuf, void* recvbuf, int count, MPI
     return res;
   }
 
-#ifdef NBC_CACHE_SCHEDULE
-  /* save schedule to tree */
-  args = (NBC_Allreduce_args *) malloc (sizeof(args));
-  if (NULL != args) {
-    args->sendbuf = sendbuf;
-    args->recvbuf = recvbuf;
-    args->count = count;
-    args->datatype = datatype;
-    args->op = op;
-    args->schedule = schedule;
-    res = hb_tree_insert ((hb_tree *) libnbc_module->NBC_Dict[NBC_ALLREDUCE], args, args, 0);
-    if (0 == res) {
-      OBJ_RETAIN(schedule);
 
-      /* increase number of elements for A2A */
-      if (++libnbc_module->NBC_Dict_size[NBC_ALLREDUCE] > NBC_SCHED_DICT_UPPER) {
-        NBC_SchedCache_dictwipe ((hb_tree *) libnbc_module->NBC_Dict[NBC_ALLREDUCE],
-                                 &libnbc_module->NBC_Dict_size[NBC_ALLREDUCE]);
-      }
-    } else {
-      NBC_Error("error in dict_insert() (%i)", res);
-      free (args);
-    }
-  }
-} else {
-  /* found schedule */
-  schedule = found->schedule;
-  OBJ_RETAIN(schedule);
- }
-#endif
-
-res = NBC_Schedule_request (schedule, comm, libnbc_module, persistent, request, tmpbuf);
-if (OPAL_UNLIKELY(OMPI_SUCCESS != res)) {
+  res = NBC_Schedule_request_win (schedule, comm, win, libnbc_module, persistent, request, tmpbuf, a_disp);
+  if (OPAL_UNLIKELY(OMPI_SUCCESS != res)) {
   OBJ_RELEASE(schedule);
   free(tmpbuf);
   return res;
- }
-
+  }
+  
 return OMPI_SUCCESS;
 }
 
@@ -199,21 +181,41 @@ int ompi_coll_libnbc_allreduce(const void* sendbuf, void* recvbuf, int count, MP
                                MPI_Op op, struct ompi_communicator_t *comm, ompi_request_t ** request,
                                struct mca_coll_base_module_2_3_0_t *module) {
 
-  int res = nbc_allreduce_init(sendbuf, recvbuf, count, datatype, op, comm, request, module, false);
+  ompi_communicator_t *newcomm;
+  ompi_win_t *win;
+  MPI_Aint disp;
+
+  int size ;
+
+  
+  /* create MPI_WIN dynamic */
+  int res =  NBC_Win_icreate_dynamic (MPI_INFO_NULL, comm, &newcomm, &win, request);
   if (OPAL_UNLIKELY(OMPI_SUCCESS != res)) {
     return res;
   }
 
-  res = NBC_Start(*(ompi_coll_libnbc_request_t **)request);
+  // TODO: I need to make sure win_icreate_dynamic has finished before continuing
+
+  /*  complete call to icreate dynamic  */
+  /* res = NBC_Sched_complete_icreate_dynamic();*/
+  
+  res = nbc_allreduce_init(sendbuf, recvbuf, count, datatype, op, newcomm, request, module, win, false);
   if (OPAL_UNLIKELY(OMPI_SUCCESS != res)) {
-    NBC_Return_handle (*(ompi_coll_libnbc_request_t **)request);
-    *request = &ompi_request_null.request;
     return res;
   }
-
-  return OMPI_SUCCESS;
+    
+    res = NBC_Start(*(ompi_coll_libnbc_request_t **)request);
+    if (OPAL_UNLIKELY(OMPI_SUCCESS != res)) {
+      NBC_Return_handle (*(ompi_coll_libnbc_request_t **)request);
+      *request = &ompi_request_null.request;
+      return res;
+    }
+    
+    return OMPI_SUCCESS;
 }
 
+
+/*  inter comm */
 static int nbc_allreduce_inter_init(const void* sendbuf, void* recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op,
                                     struct ompi_communicator_t *comm, ompi_request_t ** request,
@@ -368,8 +370,7 @@ static inline int allred_sched_diss(int rank, int p, int count, MPI_Datatype dat
       }
     }
   }
-  /* icreate a dynamic window */
-  /* NBC_Icreate_dynamic() */
+
 
   /* add complete wait request */
   /* if (NULL != req) { */

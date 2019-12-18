@@ -123,6 +123,7 @@ struct ompi_coll_libnbc_request_t {
     NBC_Comminfo *comminfo;
     NBC_Schedule *schedule;
     MPI_Win win;
+    MPI_Aint *a_disp; /* internal pointer to the MPI win displacement array */
     void *tmpbuf; /* temporary buffer e.g. used for Reduce */
     /* TODO: we should make a handle pointer to a state later (that the user
      * can move request handles) */

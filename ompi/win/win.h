@@ -141,6 +141,12 @@ int ompi_win_allocate(size_t size, int disp_unit, opal_info_t *info,
 int ompi_win_allocate_shared(size_t size, int disp_unit, opal_info_t *info,
                       ompi_communicator_t *comm, void *baseptr, ompi_win_t **newwin);
 int ompi_win_create_dynamic(opal_info_t *info, ompi_communicator_t *comm, ompi_win_t **newwin);
+int
+ompi_win_icreate_dynamic(opal_info_t *info, ompi_communicator_t *comm, ompi_communicator_t **newcomm,
+                         ompi_win_t **newwin, ompi_request_t **request);
+int 
+ompi_complete_win_icreate_dynamic(opal_info_t *info, ompi_communicator_t *comm, ompi_win_t **newwin, 
+                                  ompi_request_t **request);
 
 int ompi_win_free(ompi_win_t *win);
 

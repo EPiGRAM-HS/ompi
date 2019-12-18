@@ -46,6 +46,28 @@ int ompi_osc_base_select(ompi_win_t *win,
                          int flavor,
                          int *model);
 
+
+int ompi_osc_base_iselect(ompi_win_t *win,
+                          void **base,
+                          size_t size,
+                          int disp_unit,
+                          ompi_communicator_t *comm,
+                          ompi_communicator_t **newcomm,
+                          opal_info_t *info,
+                          int flavor,
+                          ompi_request_t **request,
+                          int *model);
+
+
+int ompi_osc_base_complete_iselect(ompi_win_t *win,
+                                   void **base,
+                                   size_t size,
+                                   int disp_unit,
+                                   ompi_communicator_t *comm,
+                                   opal_info_t *info,
+                                   int flavor,
+                                   ompi_request_t **request,
+                                   int *model);
 int ompi_osc_base_finalize(void);
 
 OMPI_DECLSPEC extern mca_base_framework_t ompi_osc_base_framework;

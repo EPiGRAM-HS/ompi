@@ -22,6 +22,7 @@ enum ompi_osc_rdma_request_type_t {
     OMPI_OSC_RDMA_TYPE_ACC,
     OMPI_OSC_RDMA_TYPE_GET_ACC,
     OMPI_OSC_RDMA_TYPE_CSWAP,
+    OMPI_OSC_RDMA_TYPE_WIN
 };
 typedef enum ompi_osc_rdma_request_type_t ompi_osc_rdma_request_type_t;
 
