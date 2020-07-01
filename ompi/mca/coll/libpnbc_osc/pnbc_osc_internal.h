@@ -290,6 +290,7 @@ extern "C" {
 #define NBC_GET_BYTES(ptr,x) {memcpy(&x,ptr,sizeof(x)); ptr += sizeof(x);}
 #define NBC_PUT_BYTES(ptr,x) {memcpy(ptr,&x,sizeof(x)); ptr += sizeof(x);}
 
+
   /* NBC_GET_ROUND_SIZE returns the size in bytes of a round of a NBC_Schedule
    * schedule. A round has the format:
    * [num]{[type][type-args]}
@@ -478,12 +479,13 @@ extern "C" {
     if(NBC_DLEVEL >= level) {
       MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-      printf("[LibNBC - %i] ", rank);
+      printf("[LibPNBC - %i] ", rank);
       va_start(ap, fmt);
       vprintf(fmt, ap);
       va_end (ap);
     }
 #endif
+
   }
 
   /* returns true (1) or false (0) if type is intrinsic or not */

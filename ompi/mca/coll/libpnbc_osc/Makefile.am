@@ -30,7 +30,6 @@ sources = \
 	pnbc_osc_iallgather.c \
 	pnbc_osc_iallgatherv.c \
 	pnbc_osc_iallreduce.c \
-	pnbc_osc_rallreduce.c \
 	pnbc_osc_ialltoall.c \
 	pnbc_osc_ialltoallv.c \
 	pnbc_osc_ialltoallw.c \
@@ -51,7 +50,7 @@ sources = \
 	pnbc_osc_iscatter.c \
 	pnbc_osc_iscatterv.c \
 	pnbc_osc_neighbor_helpers.c \
-	coll_libpnbc_osc_win.c	
+	coll_libpnbc_osc_win.c
 
 # Make the output library in this directory, and name it either
 # mca_<type>_<name>.la (for DSO builds) or libmca_<type>_<name>.la

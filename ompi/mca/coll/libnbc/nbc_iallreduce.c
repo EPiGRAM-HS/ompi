@@ -227,6 +227,7 @@ static int nbc_allreduce_init(const void* sendbuf, void* recvbuf, int count, MPI
 int ompi_coll_libnbc_iallreduce(const void* sendbuf, void* recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
                                 struct ompi_communicator_t *comm, ompi_request_t ** request,
                                 struct mca_coll_base_module_2_3_0_t *module) {
+
     int res = nbc_allreduce_init(sendbuf, recvbuf, count, datatype, op,
                                  comm, request, module, false);
     if (OPAL_UNLIKELY(OMPI_SUCCESS != res)) {

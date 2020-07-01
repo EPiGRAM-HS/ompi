@@ -78,7 +78,8 @@ static int nbc_schedule_grow (NBC_Schedule *schedule, int additional) {
   return OMPI_SUCCESS;
 }
 
-static int nbc_schedule_round_append (NBC_Schedule *schedule, void *data, int data_size, bool barrier) {
+static int nbc_schedule_round_append (NBC_Schedule *schedule, void *data, int data_size,
+                                      bool barrier) {
   int ret, size = nbc_schedule_get_size (schedule);
 
   if (barrier) {
@@ -230,8 +231,9 @@ static int NBC_Sched_try_get_internal (const void* buf, char tmpbuf, int origin_
 int NBC_Sched_try_get (const void* buf, char tmpbuf, int origin_count, MPI_Datatype origin_datatype,
                        int target, int target_count,  MPI_Datatype target_datatype,
                        NBC_Schedule *schedule, int lock_type, int assert, bool barrier) {
-  return NBC_Sched_try_get_internal (buf, tmpbuf, origin_count, origin_datatype, target, target_count,
-                                     target_datatype, false, schedule, lock_type, assert, barrier);
+  return NBC_Sched_try_get_internal (buf, tmpbuf, origin_count, origin_datatype, target,
+                                     target_count, target_datatype, false, schedule,
+                                     lock_type, assert, barrier);
 }
 
 /* this function puts a send into the schedule */
@@ -254,14 +256,15 @@ static int NBC_Sched_send_internal (const void* buf, char tmpbuf, int count, MPI
   if (OMPI_SUCCESS != ret) {
     return ret;
   }
-
+  
   NBC_DEBUG(10, "added send - ends at byte %i\n", nbc_schedule_get_size (schedule));
 
   return OMPI_SUCCESS;
 }
 
-int NBC_Sched_local_put (const void* buf, char tmpbuf, int origin_count, MPI_Datatype origin_datatype,
-                         int target, NBC_Schedule *schedule, bool barrier) {
+int NBC_Sched_local_put (const void* buf, char tmpbuf, int origin_count,
+                         MPI_Datatype origin_datatype, int target, NBC_Schedule *schedule,
+                         bool barrier) {
   return NBC_Sched_send_internal (buf, tmpbuf, origin_count, origin_datatype, target, true,
                                   schedule, barrier);
 }
@@ -628,7 +631,6 @@ static inline int NBC_Start_round(NBC_Handle *handle) {
         NBC_Error ("Error in win_free");
         return res;
       }
-
 #ifdef NBC_TIMING
       Iwfree_time += MPI_Wtime();
 #endif
@@ -652,6 +654,7 @@ static inline int NBC_Start_round(NBC_Handle *handle) {
 #ifdef NBC_TIMING
       Iput_time -= MPI_Wtime();
 #endif
+
       tmp = (MPI_Request *) realloc ((void *) handle->req_array, handle->req_count * sizeof (MPI_Request));
       if (NULL == tmp) {
         return OMPI_ERR_OUT_OF_RESOURCE;
@@ -712,7 +715,6 @@ static inline int NBC_Start_round(NBC_Handle *handle) {
 #ifdef NBC_TIMING
       Iget_time += MPI_Wtime();
 #endif
-
       break;
     case TRY_GET:
       NBC_DEBUG(5,"  TRY_GET (offset %li) ", offset);

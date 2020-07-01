@@ -36,7 +36,7 @@ BEGIN_C_DECLS
 /*********************** LibNBC tuning parameters ************************/
 
 /* the debug level */
-#define NBC_DLEVEL 0
+#define NBC_DLEVEL 1
 
 /* enable schedule caching - undef NBC_CACHE_SCHEDULE to deactivate it */
 /* TODO: this whole schedule cache stuff does not work with the tmbuf
@@ -161,10 +161,10 @@ int ompi_coll_libpnbc_osc_iallgather(const void* sendbuf, int sendcount, MPI_Dat
 int ompi_coll_libpnbc_osc_iallgatherv(const void* sendbuf, int sendcount, MPI_Datatype sendtype, void* recvbuf, const int *recvcounts, const int *displs,
                                  MPI_Datatype recvtype, struct ompi_communicator_t *comm, ompi_request_t ** request,
                                  struct mca_coll_base_module_2_3_0_t *module);
-int ompi_coll_libpnbc_osc_iallreduce(const void* sendbuf, void* recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
-                                struct ompi_communicator_t *comm, ompi_request_t ** request,
-                                struct mca_coll_base_module_2_3_0_t *module);
-int ompi_coll_libpnbc_osc_rallreduce(void* sendbuf, void* recvbuf, int count,
+/* int ompi_coll_libpnbc_osc_iallreduce(const void* sendbuf, void* recvbuf, int count, MPI_Datatype datatype, MPI_Op op, */
+/*                                 struct ompi_communicator_t *comm, ompi_request_t ** request, */
+/*                                 struct mca_coll_base_module_2_3_0_t *module); */
+int ompi_coll_libpnbc_osc_iallreduce(const void* sendbuf, void* recvbuf, int count,
                                      MPI_Datatype datatype, MPI_Op op,
                                      struct ompi_communicator_t *comm, ompi_request_t ** request,
                                      struct mca_coll_base_module_2_3_0_t *module);
