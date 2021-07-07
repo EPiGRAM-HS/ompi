@@ -417,7 +417,9 @@ ompi_coll_libpnbc_osc_progress(void)
     ompi_coll_libpnbc_osc_request_t* request, *next;
     int res;
 
+    PNBC_OSC_DEBUG(60, "Entered libpnbc_osc_progress\n");
     if (0 == opal_list_get_size (&mca_coll_libpnbc_osc_component.active_requests)) {
+	PNBC_OSC_DEBUG(10, "List is empty\n");
         /* no requests -- nothing to do. do not grab a lock */
         return 0;
     }

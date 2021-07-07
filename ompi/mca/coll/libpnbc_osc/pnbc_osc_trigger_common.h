@@ -1,7 +1,7 @@
 #ifndef PNBC_OSC_TRIGGER_COMMON_H
 #define PNBC_OSC_TRIGGER_COMMON_H
 
-typedef int FLAG_t;
+typedef long FLAG_t;
 
 enum TRIGGER_ACTION_STATE {
   TRIGGER_PENDING=-1,
@@ -39,6 +39,7 @@ int triggered_all_bynonzero_int(FLAG_t *trigger, void *cbstate);
 int triggered_all_byzero_int(FLAG_t *trigger, void *cbstate);
 int triggered_all_byrequest_flag(FLAG_t *trigger, void *cbstate);
 void reset_all_to_zero_int(FLAG_t *trigger, FLAG_t value);
+void reset_all_to_resetvalue_int(FLAG_t *trigger, FLAG_t value);
 enum TRIGGER_ACTION_STATE action_all_noop(void *cbstate);
 
 /* some more built-in trigger functions */
@@ -46,6 +47,7 @@ int triggered_one_bynonzero_int(FLAG_t *trigger, int index, void *cbstate);
 int triggered_one_byzero_int(FLAG_t *trigger, int index, void* cbstate);
 int triggered_one_byrequest_flag(FLAG_t *trigger, int index, void *cbstate);
 void reset_one_to_zero_int(FLAG_t *trigger, int index, FLAG_t value);
+void reset_one_to_resetvalue_int(FLAG_t *trigger, int index, FLAG_t value);
 enum TRIGGER_ACTION_STATE action_one_noop(int index, void *cbstate);
 
 #endif

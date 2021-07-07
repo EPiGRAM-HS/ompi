@@ -14,6 +14,10 @@ void reset_all_to_zero_int(FLAG_t *trigger, FLAG_t value) {
   *(int*)trigger = 0;
 }
 
+void reset_all_to_resetvalue_int(FLAG_t *trigger, FLAG_t value){
+  *trigger = value;
+}
+
 enum TRIGGER_ACTION_STATE action_all_noop(void *cbstate) {
   return ACTION_SUCCESS;
 }
@@ -29,6 +33,11 @@ int triggered_one_byzero_int(FLAG_t *trigger, int index, void* cbstate) {
 void reset_one_to_zero_int(FLAG_t *trigger, int index, FLAG_t value) {
   *trigger = 0;
 }
+
+void reset_one_to_resetvalue_int(FLAG_t *trigger, int index, FLAG_t value) {
+  *trigger = value;
+}
+
 enum TRIGGER_ACTION_STATE action_one_noop(int index, void *cbstate) {
 //  printf("ACTION for trigger %d\n", index);
   return ACTION_SUCCESS;

@@ -31,22 +31,10 @@ request_destruct(ompi_coll_libpnbc_osc_request_t *request)
 {
   if (NULL != request->schedule)
     OBJ_DESTRUCT(request->schedule);
-  if (NULL != request->req_array) {
-    for (int i=0; i<request->req_count; ++i) {
-      OBJ_DESTRUCT(request->req_array[i]);
-    }
-    free(request->req_array);
-  }
-  if (MPI_WIN_NULL == request->win) {
+  if (MPI_WIN_NULL != request->win) {
     MPI_Win_unlock_all(request->win);
     OBJ_DESTRUCT(request->win);
   }
-  if (MPI_WIN_NULL == request->winflag) {
-    MPI_Win_unlock_all(request->winflag);
-    OBJ_DESTRUCT(request->winflag);
-  }
-  if (NULL != request->tmpbuf)
-    free(request->tmpbuf);
 }
 
 static int
@@ -54,7 +42,7 @@ request_start(size_t count, ompi_request_t ** requests)
 {
     int res;
     size_t i;
-
+//todo: change debug messages
     PNBC_OSC_DEBUG(5, " ** request_start **\n");
 
     for (i = 0; i < count; i++) {
@@ -62,14 +50,10 @@ request_start(size_t count, ompi_request_t ** requests)
 
         PNBC_OSC_DEBUG(5, "--------------------------------\n");
         PNBC_OSC_DEBUG(5, "handle %p size %u\n", &handle, sizeof(handle));
-        PNBC_OSC_DEBUG(5, "req_count=%u address=%p size=%u\n", handle->req_count, &handle->req_count, sizeof(handle->req_count));
-        PNBC_OSC_DEBUG(5, "req_array %p size %u\n", &handle->req_array, sizeof(handle->req_array));
-        PNBC_OSC_DEBUG(5, "tmpbuf address=%p size=%u\n", handle->tmpbuf, sizeof(handle->tmpbuf));
         PNBC_OSC_DEBUG(5, "schedule %p size %u\n", &handle->schedule, sizeof(handle->schedule));
         if (NULL != handle->schedule) {
-            PNBC_OSC_DEBUG(5, "schedule data %p size %u\n", &handle->schedule->data, sizeof(handle->schedule->data));
-            PNBC_OSC_DEBUG(5, "schedule row_offset=%u address=%p size=%u\n",
-                handle->schedule->row_offset, &handle->schedule->row_offset, sizeof(handle->schedule->row_offset));
+          PNBC_OSC_DEBUG(5, "triggers %p length %u\n", &handle->schedule->triggers, sizeof(handle->schedule->triggers_length));
+          PNBC_OSC_DEBUG(5, "trigger_arrays %p length %u\n", &handle->schedule->trigger_arrays, sizeof(handle->schedule->trigger_arrays_length));
         }
         PNBC_OSC_DEBUG(5, "--------------------------------\n");
 
@@ -124,9 +108,5 @@ void PNBC_OSC_Free (ompi_coll_libpnbc_osc_request_t* handle) {
     handle->schedule = NULL;
   }
 
-  if (NULL != handle->tmpbuf) {
-    free((void*)handle->tmpbuf);
-    handle->tmpbuf = NULL;
-  }
 }
 

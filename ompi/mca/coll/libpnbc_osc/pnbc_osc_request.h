@@ -35,16 +35,10 @@ BEGIN_C_DECLS
 
 struct ompi_coll_libpnbc_osc_request_t {
     ompi_request_t super;
-    int current_round; // index into array: schedule->rounds
     PNBC_OSC_Schedule *schedule;
     MPI_Comm comm;
     bool nbc_complete; /* status in libpnbc_osc level */
-    volatile int req_count;
-    ompi_request_t **req_array;
-    ompi_coll_libpnbc_osc_module_t *comminfo;
     MPI_Win win;
-    MPI_Win winflag;
-    void *tmpbuf; /* temporary buffer e.g. used for Reduce */
 };
 typedef struct ompi_coll_libpnbc_osc_request_t ompi_coll_libpnbc_osc_request_t;
 OBJ_CLASS_DECLARATION(ompi_coll_libpnbc_osc_request_t);
